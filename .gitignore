@@ -1,0 +1,8 @@
+mailservice/
+config.json
+check_price.log
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ruff_cache/

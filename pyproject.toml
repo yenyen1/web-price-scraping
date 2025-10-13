@@ -1,0 +1,22 @@
+[project]
+name = "amazon_price_check"
+version = "0.1.0"
+description = "Extracting the price of a specific product from a given Amazon URL and sending an email when the price below your expectation."
+authors = [{ name = "Yenyen", email = "wangyenyen.st00g@g2.nctu.edu.tw" }]
+requires-python = ">=3.10"
+dependencies = [
+    "beautifulsoup4==4.14.2",
+    "requests==2.32.5",
+    "google-api-python-client==2.184.0"
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.sdist]
+include = ["src/", "README.md"]
+
+[tool.hatch.envs.default]
+dependencies = [
+    "pytest"
+]
