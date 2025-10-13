@@ -22,7 +22,9 @@ def fetch_price_from_url(session: requests.Session, url: str) -> str:
           url
     Return: price string (CAD$1,024.99)
             return Empty string if not found"""
-    response = session.get(url, timeout=header_config.TIMEOUT, proxies=header_config.PROXIES)
+    response = session.get(
+        url, timeout=header_config.TIMEOUT, proxies=header_config.PROXIES
+    )
     if response.status_code != 200:
         return ""
 
@@ -30,7 +32,11 @@ def fetch_price_from_url(session: requests.Session, url: str) -> str:
         soup = BeautifulSoup(response.text, "lxml")
 
         def exact_class(tag):
-            return tag.name == "div" and tag.has_attr("class") and tag["class"] == ["a-spacing-top-mini"]
+            return (
+                tag.name == "div"
+                and tag.has_attr("class")
+                and tag["class"] == ["a-spacing-top-mini"]
+            )
 
         tag = soup.find(exact_class).find(class_="a-offscreen")
         if tag:
@@ -64,12 +70,16 @@ def get_price(session: requests.Session, url: str) -> Optional[float]:
     else:
         return None
 
+
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("-c", "--credentials", type=str, help="Path of Gmail API credentials.json")
+    parser.add_argument(
+        "-c", "--credentials", type=str, help="Path of Gmail API credentials.json"
+    )
     parser.add_argument("-t", "--token", type=str, help="Path of Gmail API token.json")
     parser.add_argument("--config", type=str, help="Path of config json file")
     return parser.parse_args()
+
 
 def main():
     args = parse_args()
@@ -82,7 +92,7 @@ def main():
     s.cookies.update(header_config.COOKIES)
     time.sleep(random.uniform(1, 3))
 
-    with open(config, "r", encoding = "utf-8") as f:
+    with open(config, "r", encoding="utf-8") as f:
         data = json.load(f)
     urlname = data["urlname"]
     price_point = data["price_point"]
@@ -116,7 +126,7 @@ PriceCheckBot
                 send_email(token, credentials, receiver, sender, subject, body)
             logging.info("%s\t%f\t%d", urlname, price, count + 1)
             count += header_config.MAX_RETRIES
-        
+
         if count > header_config.MAX_RETRIES:
             time.sleep(14400)
 

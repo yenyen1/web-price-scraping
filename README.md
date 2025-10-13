@@ -15,7 +15,7 @@ amazon_price_check -c {credentials_path} -t {token_path} --config {config_path}
 ```json
 {
     "urlname": "Product name",
-    "price_point": {price_point}, 
+    "price_point": "price_point", 
     "url": "https://www.amazon.ca/*/dp/*",
     "receiver": "receiver@example.com",
     "sender": "sender@gmail.com"

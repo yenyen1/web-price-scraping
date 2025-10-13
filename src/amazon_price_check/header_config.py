@@ -19,4 +19,3 @@ HEADERS = {
     "Connection": "keep-alive",
 }
 COOKIES = {"i18n-prefs": "CAD", "lc-acbca": "en_CA"}
-

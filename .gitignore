@@ -9,4 +9,5 @@ __pycache__/
 .DS_Store
 amazon_price_check.egg-info/
 venv/
+venv/*
 build/
