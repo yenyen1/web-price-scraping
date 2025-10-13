@@ -7,3 +7,6 @@ __pycache__/
 *.pyd
 .ruff_cache/
 .DS_Store
+amazon_price_check.egg-info/
+venv/
+build/
