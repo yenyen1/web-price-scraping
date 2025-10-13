@@ -20,3 +20,6 @@ include = ["src/", "README.md"]
 dependencies = [
     "pytest"
 ]
+
+[project.scripts]
+amazon_price_check = "amazon_price_check.entrypoint.main:main"
