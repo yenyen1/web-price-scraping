@@ -14,36 +14,29 @@ from amazon_price_check.logger import get_logger
 
 logger = get_logger(__name__)
 
-
-def fetch_price_from_url(session: requests.Session, url: str) -> str:
+def fetch_price_from_url(url: str) -> str:
     """Get the one-time-purchase price form the amazon url
     Args: requests.Session
           url
     Return: price string (CAD$1,024.99)
             return Empty string if not found"""
-    response = session.get(
-        url, timeout=header_config.TIMEOUT, proxies=header_config.PROXIES
-    )
+    response = requests.get(url, headers=header_config.get_random_header())
     if response.status_code != 200:
-        print("[ERR 01] not 200")
+        logging.error("[fetch_price_from_url] status_code == 200 (line 24)")
         return ""
 
     try:
-        soup = BeautifulSoup(response.text, "lxml")
-
-        def exact_class(tag):
-            return (
-                tag.name == "div"
-                and tag.has_attr("class")
-                and tag["class"] == ["a-spacing-top-mini"]
-            )
-
-        tag = soup.find(exact_class).find(class_="a-offscreen")
+        soup = BeautifulSoup(response.text, "html.parser")
+        tag = soup.find("div", id="buybox").find(class_="a-offscreen")
         if tag:
             return tag.get_text(strip=True)
         else:
+            logging.error("keyword \"a-offsreen\" is not exist. (line 41)")
             return ""
     except Exception:
+        logging.error("[fetch_price_from_url] id=\"buybox\" does not found. (line 41)")
+        with open("respone_html.txt", "w") as f:
+            f.write(response.text)
         return ""
 
 
@@ -52,7 +45,6 @@ def normalize_price_text(text: str) -> Optional[float]:
     Args: string (CAD$1,024.99)
     Return: float (1024.99)
             return None if function falled"""
-
     import re
 
     t = text.strip()
@@ -60,14 +52,16 @@ def normalize_price_text(text: str) -> Optional[float]:
     try:
         return float(t)
     except Exception:
+        logging.error("[normalize_price_text] Extracted price string can not convert to float. (line 62)")
         return None
 
 
-def get_price(session: requests.Session, url: str) -> Optional[float]:
-    price = fetch_price_from_url(session, url)
+def get_price(url: str) -> Optional[float]:
+    price = fetch_price_from_url(url)
     if price != "":
         return normalize_price_text(price)
     else:
+        logging.error("Return empty string from get_price")
         return None
 
 
@@ -80,6 +74,21 @@ def parse_args():
     parser.add_argument("--config", type=str, help="Path of config json file")
     return parser.parse_args()
 
+def _get_object_and_body(urlname:str, url: str, price: float, price_point: float) -> tuple[str, str]:
+    subject = f"[PRICE ALERT] '{urlname}' is now only ${price:.2f}"
+    body = f"""
+Hi,
+
+The product you're tracking has dropped in price.
+
+    Product name: {urlname}
+    Product url: {url}
+    Current price: ${price:.2f}
+    Alert price point: ${price_point:.2f}
+
+PriceCheckBot
+"""
+    return subject, body
 
 def main():
     args = parse_args()
@@ -95,45 +104,24 @@ def main():
     receiver = data["receiver"]
     sender = data["sender"]
 
-
-
     count = 0
     while True:
-        s = requests.Session()
-        s.headers.update(header_config.get_random_header())
-        # s.cookies.update(header_config.COOKIES)
-        # time.sleep(random.uniform(5, 10))  
-
-        price = get_price(s, url)
+        price = get_price(url)
         if price is None:
             logging.warning("%s\t.\t%d", urlname, count + 1)
             count += 1
-            time.sleep(random.uniform(5, 25))
+            time.sleep(random.uniform(10, 25))
         else:
             if price < price_point:
-                subject = f"[PRICE ALERT] '{urlname}' is now only ${price:.2f}"
-                body = f"""
-Hi,
-
-The product you're tracking has dropped in price.
-
-    Product name: {urlname}
-    Product url: {url}
-    Current price: ${price:.2f}
-    Alert price point: ${price_point:.2f}
-
-PriceCheckBot
-"""
-
+                subject, body = _get_object_and_body(urlname, url, price, price_point)
                 send_email(token, credentials, receiver, sender, subject, body)
             logging.info("%s\t%f\t%d", urlname, price, count + 1)
-            count += header_config.MAX_RETRIES
-
-        if count > header_config.MAX_RETRIES:
-            # time.sleep(14400)
-            time.sleep(20)
             count = 0
+            time.sleep(14400)
 
+        if count >= header_config.MAX_RETRIES:
+            count = 0
+            time.sleep(14400)
 
 
 if __name__ == "__main__":
