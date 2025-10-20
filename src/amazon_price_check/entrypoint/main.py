@@ -8,7 +8,6 @@ import json
 import requests
 from bs4 import BeautifulSoup
 
-
 from amazon_price_check.mail_service import send_email
 from amazon_price_check import header_config
 from amazon_price_check.logger import get_logger
@@ -26,6 +25,7 @@ def fetch_price_from_url(session: requests.Session, url: str) -> str:
         url, timeout=header_config.TIMEOUT, proxies=header_config.PROXIES
     )
     if response.status_code != 200:
+        print("[ERR 01] not 200")
         return ""
 
     try:
@@ -87,11 +87,6 @@ def main():
     credentials = args.credentials
     config = args.config
 
-    s = requests.Session()
-    s.headers.update(header_config.HEADERS)
-    s.cookies.update(header_config.COOKIES)
-    time.sleep(random.uniform(1, 3))
-
     with open(config, "r", encoding="utf-8") as f:
         data = json.load(f)
     urlname = data["urlname"]
@@ -100,13 +95,20 @@ def main():
     receiver = data["receiver"]
     sender = data["sender"]
 
+
+
     count = 0
     while True:
+        s = requests.Session()
+        s.headers.update(header_config.get_random_header())
+        # s.cookies.update(header_config.COOKIES)
+        # time.sleep(random.uniform(5, 10))  
+
         price = get_price(s, url)
         if price is None:
             logging.warning("%s\t.\t%d", urlname, count + 1)
             count += 1
-            time.sleep(random.uniform(1, 2.5))
+            time.sleep(random.uniform(5, 25))
         else:
             if price < price_point:
                 subject = f"[PRICE ALERT] '{urlname}' is now only ${price:.2f}"
@@ -128,7 +130,10 @@ PriceCheckBot
             count += header_config.MAX_RETRIES
 
         if count > header_config.MAX_RETRIES:
-            time.sleep(14400)
+            # time.sleep(14400)
+            time.sleep(20)
+            count = 0
+
 
 
 if __name__ == "__main__":
