@@ -14,6 +14,7 @@ from amazon_price_check.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 def fetch_price_from_url(url: str) -> str:
     """Get the one-time-purchase price form the amazon url
     Args: requests.Session
@@ -31,10 +32,10 @@ def fetch_price_from_url(url: str) -> str:
         if tag:
             return tag.get_text(strip=True)
         else:
-            logging.error("keyword \"a-offsreen\" is not exist. (line 41)")
+            logging.error('keyword "a-offsreen" is not exist. (line 41)')
             return ""
     except Exception:
-        logging.error("[fetch_price_from_url] id=\"buybox\" does not found. (line 41)")
+        logging.error('[fetch_price_from_url] id="buybox" does not found. (line 41)')
         with open("respone_html.txt", "w") as f:
             f.write(response.text)
         return ""
@@ -52,7 +53,9 @@ def normalize_price_text(text: str) -> Optional[float]:
     try:
         return float(t)
     except Exception:
-        logging.error("[normalize_price_text] Extracted price string can not convert to float. (line 62)")
+        logging.error(
+            "[normalize_price_text] Extracted price string can not convert to float. (line 62)"
+        )
         return None
 
 
@@ -74,7 +77,10 @@ def parse_args():
     parser.add_argument("--config", type=str, help="Path of config json file")
     return parser.parse_args()
 
-def _get_object_and_body(urlname:str, url: str, price: float, price_point: float) -> tuple[str, str]:
+
+def _get_object_and_body(
+    urlname: str, url: str, price: float, price_point: float
+) -> tuple[str, str]:
     subject = f"[PRICE ALERT] '{urlname}' is now only ${price:.2f}"
     body = f"""
 Hi,
@@ -89,6 +95,7 @@ The product you're tracking has dropped in price.
 PriceCheckBot
 """
     return subject, body
+
 
 def main():
     args = parse_args()
